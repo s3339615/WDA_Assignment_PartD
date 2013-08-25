@@ -159,27 +159,35 @@
 	//echo $query . '</br>' ;	
 	$wine = array();
 	$grape_variety = array();
-	$query = "SELECT variety FROM wine_variety, grape_variety
+	
+	
+				  
+	//$doquery = $database->prepare($query);
+	
+    foreach($result as $row) 
+	{
+		$query = "SELECT variety FROM wine_variety, grape_variety
                   WHERE wine_variety.wine_id = $row[0] AND
                   wine_variety.variety_id = grape_variety.variety_id
                   ORDER BY variety";
-	$doquery = $database->prepare($query);
-    foreach($result as $row) 
-	{
-		$doquery->bindParam(':wine_id', $row[0]);
-    //    $varieties = mysql_query($query, $dbconn);
+	
+	//	$doquery->bindParam(':wine_id', $row[0]);
+        $varieties = $database->query($query);
 	//	echo 'while 2 </br>';
         $str = "";
-		if($doquery->execute())
-		{
-			while($variety = $doquery->fetch()) 
+	//	if($doquery->execute())
+	//	{
+		//	while($variety = $doquery->fetch()) 
+		//	$variety = $doquery->fetch();
+			foreach($varieties as $variety)
 			{
+			
             $str .= "$variety[0], ";
 	//		echo $variety . 'varitery print</br>';
 	//		echo 'while 3 </br>';
 			
 			}
-		}
+	//	}
 	//	echo $row . 'row 2</br>';
 		
 		$grape_variety = substr($str, 0, strlen($str)-2);
@@ -218,8 +226,7 @@
     }
 	
 	
-    mysql_close($dbconn);
-    echo error_get_last();
+    $database = null;
 	
 	$template->generateOutput();
 	
