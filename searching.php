@@ -7,7 +7,8 @@
 	
 	$database = null;
     try {
-        $database = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME, DB_USER, DB_PW);
+		$dsn = DB_ENGINE .':host='. DB_HOST .';dbname='. DB_NAME;
+		$database = new PDO($dsn, DB_USER, DB_PW);
     } catch(DBOException $exception) 
 	{
         echo $exception->getMessage();
@@ -57,7 +58,7 @@
 
     /*query for get the years from database*/
     $query = 'SELECT DISTINCT year FROM wine ORDER BY year';
-	$year_ids = array();
+//	$year_ids = array();
 	$year_names = array();
 //    $years = mysql_query($query, $dbconn);
 	$years = $database->query($query);
