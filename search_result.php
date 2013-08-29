@@ -13,29 +13,40 @@
     $max_cost = $_GET["max_cost"];
 	
 //    echo 'here 1</br>';
+
+	//check the validation of cost
+	if($max_cost < $min_cost)
+	{
+		echo 'Wrong Input!';
+		die();
+	}
 	
-    $query = 'SELECT DISTINCT wine.wine_id, wine_name, year, winery_name, region_name, cost, on_hand, SUM(qty) qty, SUM(price)
+	//check the validation of year
+	if($yearFrom > $yearTo)
+	{
+		echo 'Wrong Input!';
+		die();
+	}
+	
+    $query = 'SELECT DISTINCT wine.wine_id, wine_name, year, region_name, winery_name, cost, on_hand, SUM(qty) qty, SUM(price)
               FROM wine, winery, region, inventory, items, wine_variety
               WHERE wine.winery_id = winery.winery_id AND
-                    winery.region_id = region.region_id AND
-                    wine.wine_id = inventory.wine_id AND
+					wine.wine_id = inventory.wine_id AND
                     wine.wine_id = items.wine_id AND
+                    winery.region_id = region.region_id AND
                     wine.wine_id = wine_variety.wine_id';
 					
 //    echo 'here 2</br>';
-	
+
     if($criteria == 'all') 
-	{// Query all data
+	{//query for all the data
         $query .= ' GROUP BY items.wine_id
-                    ORDER BY wine_name, year
-                    LIMIT 200';
+                    ORDER BY wine_name, year';
     }
 	//echo 'here 3</br>';
     else 
-	{// Query part of data
-        /*
-            Piece together the SQL statement
-        */
+	{
+	//set together with some other sql
         if($winename != '') 
 		{
             $winename = str_replace("'", "''", $winename);
@@ -112,13 +123,13 @@
 		{
             $query .= " GROUP BY items.wine_id
                         HAVING qty >= $min_num_ordered
-                        ORDER BY wine_name, year LIMIT 200";
+                        ORDER BY wine_name, year";
         }
 		
 	//	echo 'here 14</br>';
 		
         else $query .= ' GROUP BY items.wine_id
-                         ORDER BY wine_name, year LIMIT 200';
+                         ORDER BY wine_name, year ';
 						 
     //    echo 'here 15</br>';
 		
@@ -141,7 +152,9 @@
 	
 	$database = null;
     try {
-        $database = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME, DB_USER, DB_PW);
+		$dsn = DB_ENGINE .':host='. DB_HOST .';dbname='. DB_NAME;
+		$database = new PDO($dsn, DB_USER, DB_PW);
+    
     } catch(DBOException $exception) 
 	{
         echo $exception->getMessage();
@@ -155,14 +168,16 @@
         exit;
     }
 	
+	//$error_info = array();
+	if(mysql_num_rows($result) == 0)
+	{
+		$template->setVariable("error_info", "No records match your search criteria.");
+	}
+	
 	//print the selected by searching.php
 	//echo $query . '</br>' ;	
 	$wine = array();
 	$grape_variety = array();
-	
-	
-				  
-	//$doquery = $database->prepare($query);
 	
     foreach($result as $row) 
 	{
@@ -171,23 +186,19 @@
                   wine_variety.variety_id = grape_variety.variety_id
                   ORDER BY variety";
 	
-	//	$doquery->bindParam(':wine_id', $row[0]);
         $varieties = $database->query($query);
 	//	echo 'while 2 </br>';
         $str = "";
-	//	if($doquery->execute())
-	//	{
-		//	while($variety = $doquery->fetch()) 
-		//	$variety = $doquery->fetch();
-			foreach($varieties as $variety)
-			{
-			
-            $str .= "$variety[0], ";
-	//		echo $variety . 'varitery print</br>';
-	//		echo 'while 3 </br>';
-			
-			}
-	//	}
+		
+		foreach($varieties as $variety)
+		{
+		
+		$str .= "$variety[0], ";
+//		echo $variety . 'varitery print</br>';
+//		echo 'while 3 </br>';
+		
+		}
+
 	//	echo $row . 'row 2</br>';
 		
 		$grape_variety = substr($str, 0, strlen($str)-2);
@@ -220,9 +231,7 @@
 		//echo $row[1];
 		$template->setVariable("grape_variety", $grape_variety);
 		$template->addBlock("printinfo");
-		
-		
-		
+			
     }
 	
 	
